@@ -42,7 +42,7 @@ namespace kinematics {
 					e2 = genNormal(0, sigmas[0].first);
 					delta_theta = genNormal(0, sigmas[0].second);
 				}
-				else if (j == perturbed_poses.size() - 1) {	// last pose
+				else if (j == perturbed_poses[i].size() - 1) {	// last pose
 					e1 = genNormal(0, sigmas[2].first);
 					e2 = genNormal(0, sigmas[2].first);
 					delta_theta = genNormal(0, sigmas[2].second);
@@ -208,12 +208,14 @@ namespace kinematics {
 	}
 
 	void LinkageSynthesis::particleFilterThread(std::vector<Solution>& particles, const std::vector<glm::dvec2>& linkage_region_pts, const BBox& bbox, const cv::Mat& dist_map, const BBox& dist_map_bbox, const std::vector<glm::dvec2>& linkage_avoidance_pts, const std::vector<Object25D>& moving_bodies) {
+		double perturb_size = 1;
+
 		// perturb the particles and calculate its score
 		for (int i = 0; i < particles.size(); i++) {
 			// pertube the joints
 			for (int j = 0; j < particles[i].points.size(); j++) {
-				particles[i].points[j].x += genRand(-1, 1);
-				particles[i].points[j].y += genRand(-1, 1);
+				particles[i].points[j].x += genNormal(0, perturb_size);
+				particles[i].points[j].y += genNormal(0, perturb_size);
 			}
 
 			if (optimizeCandidate(particles[i].poses, linkage_region_pts, bbox, particles[i].points)) {
