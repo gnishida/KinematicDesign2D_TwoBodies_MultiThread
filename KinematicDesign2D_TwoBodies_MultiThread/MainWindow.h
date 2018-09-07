@@ -48,6 +48,7 @@ public slots:
 	void onStepForward();
 	void onStepBackward();
 	void onCollisionCheck();
+	void onRestrictMotionRange();
 	void onShowSolutions();
 	void onShowGridLines();
 	void onShowInputPoses();

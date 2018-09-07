@@ -75,6 +75,7 @@ public:
     QAction *actionShowInputPoses;
     QAction *actionShowLinkage;
     QAction *actionChangeWeights;
+    QAction *actionRestrictMotionRange;
     QWidget *centralWidget;
     QMenuBar *menuBar;
     QMenu *menuFile;
@@ -280,6 +281,10 @@ public:
         actionShowLinkage->setChecked(true);
         actionChangeWeights = new QAction(MainWindowClass);
         actionChangeWeights->setObjectName(QStringLiteral("actionChangeWeights"));
+        actionRestrictMotionRange = new QAction(MainWindowClass);
+        actionRestrictMotionRange->setObjectName(QStringLiteral("actionRestrictMotionRange"));
+        actionRestrictMotionRange->setCheckable(true);
+        actionRestrictMotionRange->setChecked(true);
         centralWidget = new QWidget(MainWindowClass);
         centralWidget->setObjectName(QStringLiteral("centralWidget"));
         MainWindowClass->setCentralWidget(centralWidget);
@@ -332,6 +337,7 @@ public:
         menuTool->addAction(actionStepBackward);
         menuTool->addSeparator();
         menuTool->addAction(actionCollisionCheck);
+        menuTool->addAction(actionRestrictMotionRange);
         menuMode->addAction(actionSelect);
         menuMode->addAction(menuFixed_Body->menuAction());
         menuMode->addAction(menuMoving_Body->menuAction());
@@ -430,6 +436,7 @@ public:
         actionShowInputPoses->setText(QApplication::translate("MainWindowClass", "Show Input Poses", 0));
         actionShowLinkage->setText(QApplication::translate("MainWindowClass", "Show Linkage", 0));
         actionChangeWeights->setText(QApplication::translate("MainWindowClass", "Change Weights", 0));
+        actionRestrictMotionRange->setText(QApplication::translate("MainWindowClass", "Restrict Motion Range", 0));
         menuFile->setTitle(QApplication::translate("MainWindowClass", "File", 0));
         menuTool->setTitle(QApplication::translate("MainWindowClass", "Kinematics", 0));
         menuMode->setTitle(QApplication::translate("MainWindowClass", "Mode", 0));
