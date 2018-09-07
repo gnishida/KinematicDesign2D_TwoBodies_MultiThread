@@ -72,7 +72,7 @@ namespace kinematics {
 			// check hard constraints
 			if (!checkHardConstraints(points, perturbed_poses, linkage_region_pts, linkage_avoidance_pts, moving_bodies)) continue;
 
-			solutions.push_back(Solution(0, points, 0, 0, perturbed_poses));
+			solutions.push_back(Solution(0, points, position_error, orientation_error, perturbed_poses));
 		}
 	}
 
