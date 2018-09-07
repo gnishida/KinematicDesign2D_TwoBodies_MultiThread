@@ -22,7 +22,7 @@ namespace kinematics {
 		double calculateCost(Solution& solution, const std::vector<Object25D>& moving_bodies, const cv::Mat& dist_map, const BBox& dist_map_bbox);
 		int getType(const std::vector<glm::dvec2>& points);
 		bool checkRotatableCrankDefect(const std::vector<glm::dvec2>& points);
-		std::pair<double, double> checkRange(const std::vector<glm::dvec2>& points);
+		std::pair<double, double> checkRange(const std::vector<std::vector<glm::dmat3x3>>& poses, const std::vector<glm::dvec2>& points);
 		bool checkOrderDefect(const std::vector<std::vector<glm::dmat3x3>>& poses, const std::vector<glm::dvec2>& points);
 		bool checkBranchDefect(const std::vector<std::vector<glm::dmat3x3>>& poses, const std::vector<glm::dvec2>& points);
 		bool checkCircuitDefect(const std::vector<std::vector<glm::dmat3x3>>& poses, const std::vector<glm::dvec2>& points);

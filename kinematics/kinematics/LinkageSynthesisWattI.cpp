@@ -195,61 +195,73 @@ namespace kinematics {
 		}
 	}
 
-	std::pair<double, double> LinkageSynthesisWattI::checkRange(const std::vector<glm::dvec2>& points) {
-		double g = glm::length(points[0] - points[1]);
-		double a = glm::length(points[0] - points[2]);
-		double b = glm::length(points[1] - points[3]);
-		double h = glm::length(points[2] - points[3]);
+	std::pair<double, double> LinkageSynthesisWattI::checkRange(const std::vector<std::vector<glm::dmat3x3>>& poses, const std::vector<glm::dvec2>& points) {
+		if (poses[0].size() == 2) {
+			glm::dvec2 dir1 = points[2] - points[0];
+			glm::dvec2 dir2 = glm::dvec2(poses[0].back() * glm::inverse(poses[0][0]) * glm::dvec3(points[2], 1)) - points[0];
 
-		double T1 = g + h - a - b;
-		double T2 = b + g - a - h;
-		double T3 = b + h - a - g;
+			double angle1 = std::atan2(dir1.y, dir1.x);
+			double angle2 = std::atan2(dir2.y, dir2.x);
 
-		double theta_min = 0;
-		double theta_max = M_PI * 2;
+			// try clock-wise order
+			double a1 = angle1;
+			double a2 = angle2;
+			if (a2 > a1) {
+				a2 -= M_PI * 2;
+			}
+			if (a1 - a2 < M_PI) {
+				return{ std::min(a1, a2), std::max(a1, a2) };
+			}
 
-		int linkage_type = getType(points);
-		if (linkage_type == 2) {
-			if (crossProduct(points[0] - points[2], points[1] - points[0]) >= 0) {
-				theta_min = acos((a * a + g * g - (h - b) * (h - b)) / 2 / a / g);
-				theta_max = acos((a * a + g * g - (h + b) * (h + b)) / 2 / a / g);
+			// try counter-clock-wise order
+			if (angle2 < angle1) {
+				angle2 += M_PI * 2;
 			}
-			else {
-				theta_min = -acos((a * a + g * g - (h + b) * (h + b)) / 2 / a / g);
-				theta_max = -acos((a * a + g * g - (h - b) * (h - b)) / 2 / a / g);
+			return{ std::min(angle1, angle2), std::max(angle1, angle2) };
+		}
+		else {
+			glm::dvec2 dir1 = points[2] - points[0];
+			glm::dvec2 dir2 = glm::dvec2(poses[0][1] * glm::inverse(poses[0][0]) * glm::dvec3(points[2], 1)) - points[0];
+			glm::dvec2 dir3 = glm::dvec2(poses[0].back() * glm::inverse(poses[0][0]) * glm::dvec3(points[2], 1)) - points[0];
+
+			double angle1 = std::atan2(dir1.y, dir1.x);
+			double angle2 = std::atan2(dir2.y, dir2.x);
+			double angle3 = std::atan2(dir3.y, dir3.x);
+
+			// try clock-wise order
+			double a1 = angle1;
+			double a2 = angle2;
+			double a3 = angle3;
+			if (a2 > a1) {
+				a2 -= M_PI * 2;
 			}
-		}
-		else if (linkage_type == 3) {
-			if (crossProduct(points[0] - points[2], points[1] - points[0]) >= 0) {
-				theta_min = acos((a * a + g * g - (b - h) * (b - h)) / 2 / a / g);
-				theta_max = acos((a * a + g * g - (b + h) * (b + h)) / 2 / a / g);
+			while (a3 > a2) {
+				a3 -= M_PI * 2;
 			}
-			else {
-				theta_min = -acos((a * a + g * g - (b + h) * (b + h)) / 2 / a / g);
-				theta_max = -acos((a * a + g * g - (b - h) * (b - h)) / 2 / a / g);
+			if (a1 - a3 < M_PI * 2) {
+				return{ std::min(a1, a3), std::max(a1, a3) };
 			}
-		}
-		else if (linkage_type == 4 || linkage_type == 7) {
-			theta_max = acos((a * a + g * g - (b + h) * (b + h)) / 2 / a / g);
-			theta_min = -theta_max;
-		}
-		else if (linkage_type == 5) {
-			theta_min = acos((a * a + g * g - (b - h) * (b - h)) / 2 / a / g);
-			theta_max = M_PI * 2 - theta_min;
-		}
-		else if (linkage_type == 6) {
-			theta_min = acos((a * a + g * g - (h - b) * (h - b)) / 2 / a / g);
-			theta_max = M_PI * 2 - theta_min;
+
+			// try counter-clock-wise order
+			if (angle2 < angle1) {
+				angle2 += M_PI * 2;
+			}
+			if (angle3 < angle2) {
+				angle3 += M_PI * 2;
+			}
+			if (angle3 - angle1 < M_PI * 2) {
+				return{ std::min(angle1, angle3), std::max(angle1, angle3) };
+			}
 		}
 
-		return{ theta_min, theta_max };
+		return{ 0, 0 };
 	}
 
 	bool LinkageSynthesisWattI::checkOrderDefect(const std::vector<std::vector<glm::dmat3x3>>& poses, const std::vector<glm::dvec2>& points) {
 		glm::dvec2 inv_W = glm::dvec2(glm::inverse(poses[0][0]) * glm::dvec3(points[2], 1));
 
 		int linkage_type = getType(points);
-		std::pair<double, double> range = checkRange(points);
+		std::pair<double, double> range = checkRange(poses, points);
 
 		double total_cw = 0;
 		double total_ccw = 0;
@@ -453,11 +465,9 @@ namespace kinematics {
 		}
 
 		// calculte the range of motion
-		/*
 		std::pair<double, double> angle_range = checkRange(poses, points);
 		kin.min_angle = angle_range.first;
 		kin.max_angle = angle_range.second;
-		*/
 
 		return kin;
 	}
