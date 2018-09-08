@@ -205,7 +205,7 @@ namespace kinematics {
 
 			if (optimizeCandidate(particles[i].poses, linkage_region_pts, bbox, particles[i].points)) {
 				// check the hard constraints
-				if (checkHardConstraints(particles[i].points, particles[i].poses, linkage_region_pts, linkage_avoidance_pts, moving_bodies)) {
+				if (checkHardConstraints(particles[i].points, particles[i].poses, linkage_region_pts, linkage_avoidance_pts, moving_bodies, 0.06)) {
 					// calculate the score
 					particles[i].cost = calculateCost(particles[i], moving_bodies, dist_map, dist_map_bbox);
 				}
