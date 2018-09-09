@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>702</width>
+    <width>984</width>
     <height>737</height>
    </rect>
   </property>
@@ -19,7 +19,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>702</width>
+     <width>984</width>
      <height>21</height>
     </rect>
    </property>
@@ -38,7 +38,8 @@
      <string>Kinematics</string>
     </property>
     <addaction name="actionGenerateLinkageWattI"/>
-    <addaction name="actionChangeWeights"/>
+    <addaction name="actionSynthesisSettings"/>
+    <addaction name="actionWeightsWindow"/>
     <addaction name="separator"/>
     <addaction name="actionRun"/>
     <addaction name="actionRunBackward"/>
@@ -560,9 +561,9 @@
     <string>Show Linkage</string>
    </property>
   </action>
-  <action name="actionChangeWeights">
+  <action name="actionSynthesisSettings">
    <property name="text">
-    <string>Change Weights</string>
+    <string>Synthesis Settings</string>
    </property>
   </action>
   <action name="actionRestrictMotionRange">
@@ -574,6 +575,11 @@
    </property>
    <property name="text">
     <string>Restrict Motion Range</string>
+   </property>
+  </action>
+  <action name="actionWeightsWindow">
+   <property name="text">
+    <string>Weights Window</string>
    </property>
   </action>
  </widget>
