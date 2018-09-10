@@ -101,9 +101,7 @@ namespace kinematics {
 		dist_map.convertTo(dist_map, CV_64F);
 	}
 
-	void LinkageSynthesis::particleFilter(std::vector<Solution>& solutions, const std::vector<glm::dvec2>& linkage_region_pts, const cv::Mat& dist_map, const BBox& dist_map_bbox, const std::vector<glm::dvec2>& linkage_avoidance_pts, const std::vector<Object25D>& moving_bodies, int num_particles, int num_iterations, bool record_file) {
-		BBox linkage_region_bbox = boundingBox(linkage_region_pts);
-
+	void LinkageSynthesis::particleFilter(std::vector<Solution>& solutions, const cv::Mat& dist_map, const BBox& dist_map_bbox, const std::vector<Object25D>& moving_bodies, int num_particles, int num_iterations, bool record_file) {
 		std::vector<Solution> particles(std::max((int)solutions.size(), num_particles));
 		double max_cost = 0;
 
@@ -151,7 +149,7 @@ namespace kinematics {
 				int offset1 = i * particles.size() / NUM_THREADS;
 				int offset2 = (i + 1) * particles.size() / NUM_THREADS;
 				new_particles[i] = std::vector<Solution>(particles.begin() + offset1, particles.begin() + offset2);
-				threads[i] = boost::thread(&LinkageSynthesis::particleFilterThread, this, boost::ref(new_particles[i]), boost::ref(linkage_region_pts), boost::ref(linkage_region_bbox), boost::ref(dist_map), boost::ref(dist_map_bbox), boost::ref(linkage_avoidance_pts), boost::ref(moving_bodies));
+				threads[i] = boost::thread(&LinkageSynthesis::particleFilterThread, this, boost::ref(new_particles[i]), boost::ref(dist_map), boost::ref(dist_map_bbox), boost::ref(moving_bodies));
 			}
 			for (int i = 0; i < threads.size(); i++) {
 				threads[i].join();
@@ -192,7 +190,7 @@ namespace kinematics {
 		solutions = particles;
 	}
 
-	void LinkageSynthesis::particleFilterThread(std::vector<Solution>& particles, const std::vector<glm::dvec2>& linkage_region_pts, const BBox& bbox, const cv::Mat& dist_map, const BBox& dist_map_bbox, const std::vector<glm::dvec2>& linkage_avoidance_pts, const std::vector<Object25D>& moving_bodies) {
+	void LinkageSynthesis::particleFilterThread(std::vector<Solution>& particles, const cv::Mat& dist_map, const BBox& dist_map_bbox, const std::vector<Object25D>& moving_bodies) {
 		double perturb_size = 1;
 
 		// perturb the particles and calculate its score
@@ -203,9 +201,9 @@ namespace kinematics {
 				particles[i].points[j].y += genNormal(0, perturb_size);
 			}
 
-			if (optimizeCandidate(particles[i].poses, linkage_region_pts, bbox, particles[i].points)) {
+			if (optimizeCandidate(particles[i].poses, particles[i].points)) {
 				// check the hard constraints
-				if (checkHardConstraints(particles[i].points, particles[i].poses, linkage_region_pts, linkage_avoidance_pts, moving_bodies, 0.06)) {
+				if (checkHardConstraints(particles[i].points, particles[i].poses, moving_bodies, 0.06)) {
 					// calculate the score
 					particles[i].cost = calculateCost(particles[i], moving_bodies, dist_map, dist_map_bbox);
 				}
