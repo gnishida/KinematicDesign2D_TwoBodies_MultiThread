@@ -34,9 +34,9 @@ namespace kinematics {
 
 		for (int i = 0; i < perturbed_poses.size(); i++) {
 			for (int j = 1; j < perturbed_poses[i].size() - 1; j++) {
-				double e1 = genNormal(0, sigmas.first);
-				double e2 = genNormal(0, sigmas.first);
-				double delta_theta = genNormal(0, sigmas.second);
+				double e1 = genRand(-sigmas.first, sigmas.first);
+				double e2 = genRand(-sigmas.first, sigmas.first);
+				double delta_theta = genRand(-sigmas.second, sigmas.second);
 
 				perturbed_poses[i][j][2][0] += e1;
 				perturbed_poses[i][j][2][1] += e2;
@@ -105,13 +105,7 @@ namespace kinematics {
 		std::vector<Solution> particles(std::max((int)solutions.size(), num_particles));
 		double max_cost = 0;
 
-		/*
-		for (int i = 0; i < solutions.size(); i++) {
-		double cost = calculateCost(solutions[i], moving_body, dist_map, dist_map_bbox);
-		max_cost = std::max(max_cost, cost);
-		particles[i] = Particle(cost, solutions[i]);
-		}
-		*/
+		srand(0);
 
 		// augment
 		for (int i = 0; i < particles.size(); i++) {
@@ -197,8 +191,8 @@ namespace kinematics {
 		for (int i = 0; i < particles.size(); i++) {
 			// pertube the joints
 			for (int j = 0; j < particles[i].points.size(); j++) {
-				particles[i].points[j].x += genNormal(0, perturb_size);
-				particles[i].points[j].y += genNormal(0, perturb_size);
+				particles[i].points[j].x += genRand(-perturb_size, perturb_size);
+				particles[i].points[j].y += genRand(-perturb_size, perturb_size);
 			}
 
 			if (optimizeCandidate(particles[i].poses, particles[i].points)) {
