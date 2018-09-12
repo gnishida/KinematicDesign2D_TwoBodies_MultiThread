@@ -446,12 +446,6 @@ namespace canvas {
 			kinematics::BBox dist_map_bbox;
 			kinematics::LinkageSynthesis::createDistanceMapForLinkageRegion(linkage_region_pts[0], 5, dist_map_bbox, dist_map);
 
-			// calculate the center of the valid regions
-			kinematics::BBox bbox = kinematics::boundingBox(linkage_region_pts[0]);
-			glm::dvec2 bbox_center = bbox.center();
-
-			std::vector<glm::dvec2> enlarged_linkage_region_pts;
-
 			int cnt = initial_solutions.size();
 
 			if (cnt == 0) {
