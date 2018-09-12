@@ -101,7 +101,7 @@ namespace kinematics {
 		dist_map.convertTo(dist_map, CV_64F);
 	}
 
-	void LinkageSynthesis::particleFilter(std::vector<Solution>& solutions, const cv::Mat& dist_map, const BBox& dist_map_bbox, const std::vector<Object25D>& moving_bodies, int num_particles, int num_iterations, bool record_file) {
+	void LinkageSynthesis::particleFilter(const std::vector<std::vector<glm::dmat3x3>>& poses, std::vector<Solution>& solutions, const cv::Mat& dist_map, const BBox& dist_map_bbox, const std::vector<Object25D>& moving_bodies, int num_particles, int num_iterations, bool record_file) {
 		std::vector<Solution> particles(std::max((int)solutions.size(), num_particles));
 		double max_cost = 0;
 
@@ -143,7 +143,7 @@ namespace kinematics {
 				int offset1 = i * particles.size() / NUM_THREADS;
 				int offset2 = (i + 1) * particles.size() / NUM_THREADS;
 				new_particles[i] = std::vector<Solution>(particles.begin() + offset1, particles.begin() + offset2);
-				threads[i] = boost::thread(&LinkageSynthesis::particleFilterThread, this, boost::ref(new_particles[i]), boost::ref(dist_map), boost::ref(dist_map_bbox), boost::ref(moving_bodies));
+				threads[i] = boost::thread(&LinkageSynthesis::particleFilterThread, this, boost::ref(poses), boost::ref(new_particles[i]), boost::ref(dist_map), boost::ref(dist_map_bbox), boost::ref(moving_bodies));
 			}
 			for (int i = 0; i < threads.size(); i++) {
 				threads[i].join();
@@ -184,11 +184,14 @@ namespace kinematics {
 		solutions = particles;
 	}
 
-	void LinkageSynthesis::particleFilterThread(std::vector<Solution>& particles, const cv::Mat& dist_map, const BBox& dist_map_bbox, const std::vector<Object25D>& moving_bodies) {
+	void LinkageSynthesis::particleFilterThread(const std::vector<std::vector<glm::dmat3x3>>& poses, std::vector<Solution>& particles, const cv::Mat& dist_map, const BBox& dist_map_bbox, const std::vector<Object25D>& moving_bodies) {
 		double perturb_size = 1;
 
 		// perturb the particles and calculate its score
 		for (int i = 0; i < particles.size(); i++) {
+			// perturbe the poses a little
+			particles[i].poses = perturbPoses(poses, sigmas, particles[i].position_error, particles[i].orientation_error);
+
 			// pertube the joints
 			for (int j = 0; j < particles[i].points.size(); j++) {
 				particles[i].points[j].x += genRand(-perturb_size, perturb_size);
