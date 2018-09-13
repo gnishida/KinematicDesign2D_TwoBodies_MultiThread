@@ -7,6 +7,7 @@
 #include "BBox.h"
 #include "KinematicUtils.h"
 #include "Kinematics.h"
+#include <random>
 
 namespace kinematics {
 
@@ -25,12 +26,12 @@ namespace kinematics {
 	public:
 		static void calculateStatistics(const std::vector<double>& values, double& mean, double& sd);
 		static bool compare(const Solution& s1, const Solution& s2);
-		static std::vector<std::vector<glm::dmat3x3>> perturbPoses(const std::vector<std::vector<glm::dmat3x3>>& poses, std::pair<double, double>& sigmas, double& position_error, double& orientation_error);
+		static std::vector<std::vector<glm::dmat3x3>> perturbPoses(const std::vector<std::vector<glm::dmat3x3>>& poses, std::pair<double, double>& sigmas, std::default_random_engine& generator, double& position_error, double& orientation_error);
 		static std::vector<glm::dvec2> enlargePolygon(const std::vector<glm::dvec2>& polygon, const glm::dvec2& center, double scale);
 		static void createDistanceMapForLinkageRegion(const std::vector<glm::dvec2>& linkage_region_pts, double scale, BBox& dist_map_bbox, cv::Mat& dist_map);
 		void particleFilter(const std::vector<std::vector<glm::dmat3x3>>& poses, std::vector<Solution>& solutions, const cv::Mat& dist_map, const BBox& dist_map_bbox, const std::vector<Object25D>& moving_bodies, int num_particles, int num_iterations, bool record_file);
-		void particleFilterThread(const std::vector<std::vector<glm::dmat3x3>>& poses, std::vector<Solution>& particles, const cv::Mat& dist_map, const BBox& dist_map_bbox, const std::vector<Object25D>& moving_bodies);
-		void resample(std::vector<Solution> particles, int N, std::vector<Solution>& resampled_particles, double max_cost);
+		void particleFilterThread(int thread_id, const std::vector<std::vector<glm::dmat3x3>>& poses, std::vector<Solution>& particles, const cv::Mat& dist_map, const BBox& dist_map_bbox, const std::vector<Object25D>& moving_bodies);
+		void resample(std::vector<Solution> particles, int N, std::vector<Solution>& resampled_particles, double max_cost, std::default_random_engine& generator);
 
 		virtual void calculateSolution(const std::vector<std::vector<glm::dmat3x3>>& poses, const std::vector<glm::dvec2>& linkage_region_pts, const std::vector<glm::dvec2>& linkage_avoidance_pts, int num_samples, const std::vector<Object25D>& moving_bodies, std::vector<Solution>& solutions) = 0;
 		virtual bool optimizeCandidate(const std::vector<std::vector<glm::dmat3x3>>& poses, std::vector<glm::dvec2>& points) = 0;

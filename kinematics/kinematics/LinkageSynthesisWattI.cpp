@@ -29,8 +29,6 @@ namespace kinematics {
 	void LinkageSynthesisWattI::calculateSolution(const std::vector<std::vector<glm::dmat3x3>>& poses, const std::vector<glm::dvec2>& linkage_region_pts, const std::vector<glm::dvec2>& linkage_avoidance_pts, int num_samples, const std::vector<Object25D>& moving_bodies, std::vector<Solution>& solutions) {
 		solutions.clear();
 
-		srand(0);
-
 		// calculate the bounding boxe of the valid regions
 		BBox bbox = boundingBox(linkage_region_pts);
 
@@ -39,7 +37,7 @@ namespace kinematics {
 		std::vector<boost::thread> threads(NUM_THREADS);
 		std::vector<std::vector<Solution>> sub_solutions(NUM_THREADS);
 		for (int i = 0; i < threads.size(); i++) {
-			threads[i] = boost::thread(&LinkageSynthesisWattI::calculateSolutionThread, this, boost::ref(poses), boost::ref(linkage_region_pts), boost::ref(bbox), boost::ref(linkage_avoidance_pts), num_samples / NUM_THREADS, boost::ref(moving_bodies), boost::ref(sub_solutions[i]));
+			threads[i] = boost::thread(&LinkageSynthesisWattI::calculateSolutionThread, this, i, boost::ref(poses), boost::ref(linkage_region_pts), boost::ref(bbox), boost::ref(linkage_avoidance_pts), num_samples / NUM_THREADS, boost::ref(moving_bodies), boost::ref(sub_solutions[i]));
 		}
 		for (int i = 0; i < threads.size(); i++) {
 			threads[i].join();
@@ -51,18 +49,20 @@ namespace kinematics {
 		}
 	}
 
-	void LinkageSynthesisWattI::calculateSolutionThread(const std::vector<std::vector<glm::dmat3x3>>& poses, const std::vector<glm::dvec2>& linkage_region_pts, const BBox& bbox, const std::vector<glm::dvec2>& linkage_avoidance_pts, int num_samples, const std::vector<Object25D>& moving_bodies, std::vector<Solution>& solutions) {
+	void LinkageSynthesisWattI::calculateSolutionThread(int thread_id, const std::vector<std::vector<glm::dmat3x3>>& poses, const std::vector<glm::dvec2>& linkage_region_pts, const BBox& bbox, const std::vector<glm::dvec2>& linkage_avoidance_pts, int num_samples, const std::vector<Object25D>& moving_bodies, std::vector<Solution>& solutions) {
+		std::default_random_engine generator(thread_id);
+
 		for (int iter = 0; iter < num_samples; iter++) {
 			// perturbe the poses a little
 			double position_error = 0.0;
 			double orientation_error = 0.0;
-			std::vector<std::vector<glm::dmat3x3>> perturbed_poses = perturbPoses(poses, sigmas, position_error, orientation_error);
+			std::vector<std::vector<glm::dmat3x3>> perturbed_poses = perturbPoses(poses, sigmas, generator, position_error, orientation_error);
 
 			// sample joints within the linkage region
 			std::vector<glm::dvec2> points(7);
 			for (int i = 0; i < points.size(); i++) {
 				while (true) {
-					points[i] = glm::dvec2(genRand(bbox.minPt.x, bbox.maxPt.x), genRand(bbox.minPt.y, bbox.maxPt.y));
+					points[i] = glm::dvec2(genRand(generator, bbox.minPt.x, bbox.maxPt.x), genRand(generator, bbox.minPt.y, bbox.maxPt.y));
 					if (withinPolygon(linkage_region_pts, points[i])) break;
 				}
 			}
@@ -70,7 +70,7 @@ namespace kinematics {
 			if (!optimizeCandidate(perturbed_poses, points)) continue;
 
 			// check hard constraints
-			if (!checkHardConstraints(points, perturbed_poses, moving_bodies, 0.06)) continue;
+			if (!checkHardConstraints(points, perturbed_poses, moving_bodies, 0.03)) continue;
 
 			solutions.push_back(Solution(0, points, position_error, orientation_error, perturbed_poses));
 		}
