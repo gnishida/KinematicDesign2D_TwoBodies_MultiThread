@@ -13,13 +13,13 @@ namespace kinematics {
 	}
 
 	double genNormal(std::default_random_engine& generator) {
-		return genNormal(generator, 0.0, 1.0);
+		std::normal_distribution<double> distribution(0, 1);
+		return distribution(generator);
 	}
 
 	double genNormal(std::default_random_engine& generator, double myu, double sigma) {
 		if (sigma == 0) return myu;
-		std::normal_distribution<double> distribution(myu, sigma);
-		return distribution(generator);
+		return genNormal(generator) * sigma + myu;
 	}
 
 	/**
